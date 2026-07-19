@@ -1,22 +1,19 @@
-
+import java.util.ArrayList;
 
 public class Main {
 
     public static void main(String[] args) {
 
-        WorkOrder order1 = new WorkOrder();
+        ArrayList<WorkOrder> orders = new ArrayList<>();
 
-        order1.workOrderNo = "WO-001";
-        order1.quantity = 500;
+        orders.add(new WorkOrder("WO-001", 500));
+        orders.add(new WorkOrder("WO-002", 300));
+        orders.add(new WorkOrder("WO-003", 1000));
 
-        System.out.println(order1.workOrderNo);
-        System.out.println(order1.quantity);
-        System.out.println(order1.completed);
-
-        WorkOrder order2 = new WorkOrder();
-
-        order1.workOrderNo = "WO-002";
-        order1.quantity = 300;
-
+        for (WorkOrder order : orders) {
+            order.printInfo();
+            System.out.println();
+        }
     }
+
 }
