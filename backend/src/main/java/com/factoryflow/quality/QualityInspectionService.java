@@ -72,7 +72,7 @@ public class QualityInspectionService {
         workOrderRepository.save(workOrder);
 
         lotRepository.save(originalLot);
-
+        if (true) throw new RuntimeException("강제 롤백 테스트"); // 임시 테스트용
         return new QualityDto.Response(
                 originalLot.getLotNo(),
                 goodQty,
