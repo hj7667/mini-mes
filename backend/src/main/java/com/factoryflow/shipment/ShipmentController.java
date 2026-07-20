@@ -18,4 +18,4 @@ public class ShipmentController {
     public ResponseEntity<ShipmentDto.Response> ship(@RequestBody ShipmentDto.Request request) {
         return ResponseEntity.ok(fifoShipmentService.ship(request));
     }
-}
+}touch src/main/resources/application.properties
