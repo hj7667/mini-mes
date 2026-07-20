@@ -1,5 +1,6 @@
 package com.factoryflow.shipment;
 
+import com.factoryflow.common.exception.InsufficientStockException;
 import com.factoryflow.inventory.Inventory;
 import com.factoryflow.inventory.InventoryRepository;
 import com.factoryflow.inventory.WarehouseType;
@@ -10,6 +11,7 @@ import com.factoryflow.lot.ProcessStage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.factoryflow.common.exception.InsufficientStockException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -54,7 +56,7 @@ public class FifoShipmentService {
         }
 
         if (remaining > 0) {
-            throw new IllegalStateException(
+            throw new InsufficientStockException(
                     "재고가 부족합니다. 부족 수량: " + remaining + " EA");
         }
 
