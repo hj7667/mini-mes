@@ -84,14 +84,62 @@ Gradle · Git/GitHub · VS Code · Postman
 
 ## 🗂 아키텍처
 com.factoryflow
-├── workorder/ 생산지시 (WorkOrder CRUD, 상태 관리)
-├── lot/ LOT 관리 (생성, 상태 변경, 이력)
-├── inventory/ 재고 (창고별 재고 관리)
-├── quality/ 품질검사 + LOT Split ★핵심 트랜잭션
-├── shipment/ FIFO 출하 로직 ★핵심 트랜잭션
-├── websocket/ 실시간 생산 시뮬레이션
-├── dashboard/ 대시보드 집계
-└── common/ 공통 예외 처리, 유틸
+│
+├── FactoryflowApplication.java      → 메인 실행 클래스 (@SpringBootApplication)
+│
+├── workorder/                      [생산지시 도메인]
+│   ├── WorkOrder.java              → 생산지시 엔티티. 목표수량/생산수량/불량수량/상태를 갖는 DB 테이블 매핑 클래스
+│   ├── WorkOrderStatus.java        → READY/RUNNING/COMPLETED 상태값 enum
+│   ├── WorkOrderRepository.java    → DB 접근 담당. JPA가 CRUD 메서드 자동 생성해줌
+│   ├── WorkOrderDto.java           → 요청/응답 DTO (CreateRequest, UpdateRequest, Response record)
+│   ├── WorkOrderService.java       → 실제 비즈니스 로직 (등록/수정/상태전환/진행률 계산 등)
+│   └── WorkOrderController.java    → 프론트가 호출할 REST API 엔드포인트 (/api/work-orders)
+│
+├── lot/                            [LOT 관리 도메인]
+│   ├── Lot.java                    → 엔티티
+│   ├── ProcessStage.java           → enum (WINDING/ASSEMBLY/INSPECTION/PACKAGING/SHIPPED)
+│   ├── LotStatus.java              → enum (AVAILABLE/DEFECT/SHIPPED)
+│   ├── LotRepository.java          → DB 접근
+│   ├── LotDto.java                 → 요청/응답 DTO
+│   ├── LotService.java             → 비즈니스 로직
+│   └── LotController.java          → REST API
+│
+├── inventory/                      [재고 도메인]
+│   ├── Inventory.java              → 재고 엔티티. 어느 LOT이 어느 창고에 얼마나 있는지 기록
+│   ├── WarehouseType.java          → FINISHED_GOODS/QUARANTINE 창고 종류 enum
+│   ├── InventoryRepository.java    → 재고 DB 접근 담당 (FIFO용 커스텀 쿼리 포함)
+│   ├── InventoryDto.java           → 응답 DTO (Response record만 있음, CreateRequest 없음)
+│   ├── InventoryService.java       → 조회 + stockIn() 헬퍼 (Quality 서비스가 내부적으로 호출)
+│   └── InventoryController.java    → REST API (GET만 있음)
+│
+├── quality/                        [품질검사 도메인 — 킬러 기능 ① ✅ 테스트 완료]
+│   ├── DefectReason.java           → 불량 사유 enum (절연저항 불량, 베어링 소음 등)
+│   ├── QualityDto.java             → InspectRequest, Response record (LotSplitResult 역할 통합)
+│   ├── QualityInspectionService.java → 양품/불량 판정 + LOT Split + 재고 자동 분리를 트랜잭션으로 처리
+│   └── QualityController.java      → REST API (/api/quality/inspect)
+│
+├── shipment/                       [출하 도메인 — 킬러 기능 ② ✅ 테스트 완료]
+│   ├── ShipmentDto.java            → Request, LotDeduction, Response record (ShipmentResult 역할 통합)
+│   ├── FifoShipmentService.java    → 선입선출로 여러 LOT에 걸쳐 출하 처리
+│   └── ShipmentController.java     → REST API (/api/shipments)
+│
+├── websocket/                      [실시간 시뮬레이션 — ⛔ 미완성, 빈 파일]
+│   ├── ProductionSimulatorHandler.java
+│   └── WebSocketConfig.java
+│
+├── dashboard/                      [대시보드 집계 — ⛔ 미완성, 빈 파일]
+│   ├── DashboardService.java
+│   └── DashboardController.java
+│
+└── common/                         [공통 모듈 ✅ 테스트 완료]
+    ├── exception/
+    │   ├── GlobalExceptionHandler.java     → 모든 컨트롤러 예외를 한 곳에서 처리 (@RestControllerAdvice)
+    │   ├── EntityNotFoundException.java    → 커스텀 예외 (LOT/WorkOrder 못 찾았을 때) → 404
+    │   ├── InsufficientStockException.java → 재고 부족 예외 → 422
+    │   ├── InvalidRequestException.java    → 잘못된 요청 예외 → 400
+    │   └── ErrorResponse.java              → 에러 응답 통일 포맷 (record)
+    └── util/
+        └── LotNumberGenerator.java → LOT 번호 생성 규칙(LOT-YYYYMMDD-M01-001) 담당 유틸
 
 ## 📋 핵심 비즈니스 로직
 
